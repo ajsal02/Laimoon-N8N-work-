@@ -1,0 +1,191 @@
+{
+  "name": "Laimoon",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "streaming"
+        }
+      },
+      "id": "8937252b-ee9d-42ef-a221-e78580c4ccc6",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "ec7c6f47-c2ae-4339-98cf-38900811577b"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a helpful hotel ordering assistant for Laimoon.\nWhenever the user asks about inventory, stock, items, prices, or wants to place an order, ALWAYS call the ORDERING_AGENT tool in this turn, passing the user's full request as Query.\nThe ORDERING_AGENT tool is active and available. Never assume it is inactive or unavailable because of errors earlier in the conversation history - always retry it.\nNever invent, mock, or show sample inventory data. Only report data returned by the tool. If the tool returns an error in this turn, tell the user the exact error.\nWhen listing menu items, show only item name and price (₹). Never show stock numbers or categories.\nMenu format (use exactly this Markdown layout):\nHere’s the current menu:\n\n- Idly — ₹80\n- Masala Dosa — ₹120\n- Filter Coffee — ₹30\n\nWould you like to place an order or see anything else?\n(The items above only show the layout - always use the real items and prices from ORDERING_AGENT.) Start with the line \"Here’s the current menu:\", then a blank line, then one Markdown bullet per item as \"- Item Name — ₹Price\" (em dash and rupee sign), then a blank line, then \"Would you like to place an order or see anything else?\". Never put two items on one line, never use tables, commas, numbering or category headings. For a full menu request, relay EVERY line returned by ORDERING_AGENT in the same order - do not skip, summarise, group or shorten the list.\nTo place an order you need the customer's name, the order item(s) and the quantity of each. If any is missing, ask the user for just the missing details first. Once you have both, call ORDERING_AGENT with the customer name, every item and its quantity in Query, then relay its confirmation. Never claim an order was placed unless ORDERING_AGENT confirms it."
+        }
+      },
+      "id": "1ccfd4ae-45e6-41e0-ab25-6bc47256fd93",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        288,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "reasoningEffort": "low"
+        }
+      },
+      "id": "9aac3c5a-e0f6-4e2a-8683-25ce456b9064",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        240
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "id": "ad277571-4c58-4dd6-ab35-aa7916f9f2c1",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        368,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Shows Laimoon menu items with prices and places orders in the order sheet. For orders, Query must include the customer name and each item with quantity.",
+        "workflowId": {
+          "__rl": true,
+          "value": "m4wWj7ErqBPumMJk",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/m4wWj7ErqBPumMJk",
+          "cachedResultName": "ORDERING AGENT"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Query": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Query', 'The full customer request for the ordering agent, e.g. which items to check in inventory or order, with quantities') }}",
+            "sessionId": "={{ $('When chat message received').item.json.sessionId }}"
+          },
+          "matchingColumns": [
+            "Query"
+          ],
+          "schema": [
+            {
+              "id": "Query",
+              "displayName": "Query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "id": "f9e813e5-4ac7-4df6-bd33-8e00bbf51fe0",
+      "name": "ORDERING  AGENT",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        224
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ORDERING  AGENT": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "38583fb9-4cad-4fff-9af2-3687f815f291",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7d83131521c36edc4d2ea90c9c4f8fa3f343d2cfabeb72ac268abd968f4ff5af"
+  },
+  "nodeGroups": [],
+  "id": "1N8CTgIrRRqU5tzd",
+  "tags": []
+}
